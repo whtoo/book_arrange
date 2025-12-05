@@ -1,0 +1,22 @@
+# DeepSeek API配置
+deepseek_api_url: "https://api.deepseek.com/v1/chat/completions"
+deepseek_api_key: "YOUR_API_KEY_HERE"  # 请设置DEEPSEEK_API_KEY环境变量或在此替换为您的API密钥
+
+# 批处理配置
+batch_max_size: 16  # 减小批次大小，避免API传输编码问题
+
+# 支持的书籍文件类型
+book_exts:
+  - ".pdf"
+  - ".epub"
+  - ".mobi"
+  - ".djvu"
+  - ".txt"
+
+# 未分类文件夹
+uncat: "其他"
+
+# 默认目录路径配置
+default_paths:
+  src_dir: "/Users/blitz/Downloads"
+  target_dir: "/Users/blitz/Documents/Books"
