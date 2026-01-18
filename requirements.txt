@@ -1,2 +1,4 @@
 aiohttp==3.12.13
 SQLAlchemy==2.0.42
+click>=8.0.0
+PyYAML>=6.0

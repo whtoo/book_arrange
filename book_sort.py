@@ -2,6 +2,7 @@
 Book Sort 主程序 - 重构版本
 智能图书分类系统的主控制器和程序入口
 """
+
 import argparse
 import asyncio
 import sys
@@ -9,7 +10,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 
 # 添加当前目录到 Python 路径，以便导入模块
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
 from config.config_manager import ConfigManager
 from database.database_manager import DatabaseManager
@@ -26,13 +27,15 @@ class BookSortController:
     负责协调各个组件，编排整个分类流程
     """
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 database_manager: DatabaseManager,
-                 file_scanner: FileScanner,
-                 ai_service: AICategorizationService,
-                 file_manager: FileManager,
-                 task_manager: TaskManager):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        database_manager: DatabaseManager,
+        file_scanner: FileScanner,
+        ai_service: AICategorizationService,
+        file_manager: FileManager,
+        task_manager: TaskManager,
+    ):
         """初始化主控制器
 
         Args:
@@ -91,8 +94,12 @@ class BookSortController:
             # 4. 获取现有分类
             print("4️⃣ 获取现有分类...")
             uncat_folder = self.config_manager.get_uncat_folder()
-            existing_categories = self.file_scanner.get_existing_categories(target_dir, uncat_folder)
-            print(f"✓ 发现现有分类: {existing_categories if existing_categories else '无'}")
+            existing_categories = self.file_scanner.get_existing_categories(
+                target_dir, uncat_folder
+            )
+            print(
+                f"✓ 发现现有分类: {existing_categories if existing_categories else '无'}"
+            )
 
             # 5. 创建分类任务
             print("5️⃣ 创建分类任务...")
@@ -115,7 +122,9 @@ class BookSortController:
                     final_task = self.task_manager.get_task(final_session, task.task_id)
                     if final_task:
                         print(f"\n✅ 分类任务完成")
-                        print(f"   处理文件总数: {final_task.processed_files}/{final_task.total_files}")
+                        print(
+                            f"   处理文件总数: {final_task.processed_files}/{final_task.total_files}"
+                        )
                 finally:
                     final_session.close()
 
@@ -129,10 +138,7 @@ class BookSortController:
             print(f"❌ 系统运行失败: {e}")
             raise
 
-    async def _process_classification(self,
-                                     session,
-                                     task,
-                                     target_dir: str) -> None:
+    async def _process_classification(self, session, task, target_dir: str) -> None:
         """处理分类任务（异步）
 
         Args:
@@ -158,6 +164,7 @@ class BookSortController:
                     break
 
                 import json
+
                 pending_files_list = json.loads(task_obj.pending_files)
 
                 if not pending_files_list:
@@ -167,11 +174,11 @@ class BookSortController:
                 batch_filenames = [self._get_filename_from_path(f) for f in batch_files]
 
                 print(f"\n📦 正在处理批次，包含 {len(batch_files)} 个文件...")
-                print(f"   进度: {progress_info['processed_files']}/{progress_info['total_files']} "
-                      f"({progress_info['percentage']:.1f}%)")
 
                 # 调用 AI 服务进行分类
-                existing_categories = self.file_scanner.get_existing_categories(target_dir, uncat_folder)
+                existing_categories = self.file_scanner.get_existing_categories(
+                    target_dir, uncat_folder
+                )
                 classification_results = await self.ai_service.classify_books(
                     batch_filenames, existing_categories
                 )
@@ -195,7 +202,9 @@ class BookSortController:
                         book_info = self.database_manager.get_or_create_book_info(
                             current_session, filename, target_path
                         )
-                        self.database_manager.update_book_category(current_session, filename, category)
+                        self.database_manager.update_book_category(
+                            current_session, filename, category
+                        )
 
                         # 记录完成状态
                         completed_files_list.append(file_path)
@@ -206,22 +215,40 @@ class BookSortController:
                         completed_files_list.append(file_path)
 
                 # 更新任务进度
-                completed_count = progress_info['processed_files'] + len(completed_files_list)
+                completed_count = progress_info["processed_files"] + len(
+                    completed_files_list
+                )
 
                 # Get existing completed files and add new ones
-                existing_completed = json.loads(task_obj.completed_files) if task_obj.completed_files else []
+                existing_completed = (
+                    json.loads(task_obj.completed_files)
+                    if task_obj.completed_files
+                    else []
+                )
                 all_completed = existing_completed + completed_files_list
 
                 # Calculate remaining pending files
-                remaining_pending = [f for f in pending_files_list if f not in completed_files_list]
+                remaining_pending = [
+                    f for f in pending_files_list if f not in completed_files_list
+                ]
 
                 self.task_manager.update_task_progress(
                     current_session,
                     task.task_id,
                     completed_count,
                     all_completed,
-                    remaining_pending
+                    remaining_pending,
                 )
+
+                # 更新后重新获取并显示最新进度
+                updated_progress = self.task_manager.get_task_progress(
+                    current_session, task.task_id
+                )
+                if updated_progress:
+                    print(
+                        f"   当前进度: {updated_progress['processed_files']}/{updated_progress['total_files']} "
+                        f"({updated_progress['percentage']:.1f}%)"
+                    )
 
                 print(f"✓ 批次处理完成")
 
@@ -241,6 +268,7 @@ class BookSortController:
             文件名
         """
         import os
+
         return os.path.basename(file_path)
 
 
@@ -262,17 +290,17 @@ def create_components(config_manager: ConfigManager):
     ai_service = AICategorizationService(
         config_manager.get_deepseek_api_url(),
         config_manager.get_deepseek_api_key(),
-        config_manager.get_batch_max_size()
+        config_manager.get_batch_max_size(),
     )
     file_manager = FileManager(config_manager.get_uncat_folder())
     task_manager = TaskManager(database_manager)
 
     return {
-        'database_manager': database_manager,
-        'file_scanner': file_scanner,
-        'ai_service': ai_service,
-        'file_manager': file_manager,
-        'task_manager': task_manager
+        "database_manager": database_manager,
+        "file_scanner": file_scanner,
+        "ai_service": ai_service,
+        "file_manager": file_manager,
+        "task_manager": task_manager,
     }
 
 
@@ -291,7 +319,7 @@ def main():
   %(prog)s                                      # 使用默认路径
   %(prog)s --src_dir /path/to/books             # 指定源目录
   %(prog)s --src_dir /src --target_dir /dest    # 指定源和目标目录
-            """
+            """,
         )
 
         default_src_dir = config_manager.get_default_src_dir()
@@ -301,13 +329,13 @@ def main():
             "--src_dir",
             type=str,
             default=default_src_dir,
-            help=f"待分类图书的源目录 (默认: {default_src_dir})"
+            help=f"待分类图书的源目录 (默认: {default_src_dir})",
         )
         parser.add_argument(
             "--target_dir",
             type=str,
             default=default_target_dir,
-            help=f"存放分类后图书的目标目录 (默认: {default_target_dir})"
+            help=f"存放分类后图书的目标目录 (默认: {default_target_dir})",
         )
 
         args = parser.parse_args()
@@ -325,11 +353,11 @@ def main():
         # 5. 创建主控制器
         controller = BookSortController(
             config_manager=config_manager,
-            database_manager=components['database_manager'],
-            file_scanner=components['file_scanner'],
-            ai_service=components['ai_service'],
-            file_manager=components['file_manager'],
-            task_manager=components['task_manager']
+            database_manager=components["database_manager"],
+            file_scanner=components["file_scanner"],
+            ai_service=components["ai_service"],
+            file_manager=components["file_manager"],
+            task_manager=components["task_manager"],
         )
 
         # 6. 运行系统

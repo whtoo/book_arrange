@@ -47,6 +47,24 @@ conda activate fastapi-env
 pip install -r requirements.txt
 ```
 
+**或者，使用 pip 安装（推荐，可将 book-sort 添加到 PATH）**
+
+```bash
+# 开发模式安装（可在 PATH 中直接使用 book-sort 命令）
+pip install -e .
+
+# 或直接安装
+pip install .
+```
+
+安装后，您可以在任何目录直接使用 `book-sort` 命令：
+
+```bash
+book-sort --help
+book-sort classify
+book-sort config show
+```
+
 3. **配置 API 密钥**
 
 编辑 `config.yaml` 文件，设置您的 DeepSeek API 密钥：
@@ -70,12 +88,157 @@ export DEEPSEEK_API_KEY="sk-your-actual-api-key"
 
 4. **运行程序**
 
+**方式一：使用 book-sort 命令（推荐，安装后可用）**
+
 ```bash
-# 使用默认配置（使用 config.yaml 中的路径）
+# 使用默认配置（从 config.yaml 读取）
+book-sort classify
+
+# 指定自定义路径
+book-sort classify -s /path/to/source -t /path/to/target
+
+# 指定批处理大小
+book-sort classify -b 32
+
+# 查看帮助
+book-sort --help
+book-sort classify --help
+```
+
+**方式二：使用 Python 脚本**
+
+```bash
+# 使用默认配置
 python book_sort.py
 
 # 指定自定义路径
 python book_sort.py --src_dir /path/to/your/books --target_dir /path/to/sorted/books
+```
+
+**方式三：使用 CLI 脚本**
+
+```bash
+# 使用默认配置
+python cli.py classify
+
+# 指定自定义路径
+python cli.py classify -s /path/to/source -t /path/to/target
+```
+
+## 📦 安装方式对比
+
+| 方式 | 优点 | 缺点 | 适用场景 |
+|------|------|------|----------|
+| `pip install -e .` | 可直接使用 `book-sort` 命令，自动更新代码变化 | 需要安装到系统 | 日常使用，开发调试 |
+| `python book_sort.py` | 无需安装，直接运行 | 需要完整路径或切换目录 | 快速测试，一次性使用 |
+| `python cli.py` | 无需安装，功能完整 | 需要完整路径或切换目录 | 快速测试，一次性使用 |
+
+### 推荐安装方式
+
+```bash
+# 1. 开发模式安装（可自动同步代码变化）
+pip install -e .
+
+# 2. 验证安装
+book-sort --help
+
+# 3. 查看安装位置
+which book-sort
+```
+
+安装后，您可以在**任何目录**直接使用 `book-sort` 命令：
+
+```bash
+# 在任何目录都可以直接使用
+cd ~
+book-sort classify
+
+cd /tmp
+book-sort config show
+```
+
+## 🖥️ CLI 使用指南
+
+### 命令结构
+
+```bash
+book-sort [OPTIONS] COMMAND [ARGS]...
+```
+
+### 可用命令
+
+#### 1. classify - 执行图书分类
+
+```bash
+# 使用默认配置
+book-sort classify
+
+# 指定源目录和目标目录
+book-sort classify -s /path/to/source -t /path/to/target
+
+# 指定批处理大小
+book-sort classify -b 20
+
+# 组合使用
+book-sort classify -s ~/Downloads -t ~/Documents/Books -b 16
+```
+
+**选项：**
+- `-s, --src-dir PATH`: 源目录路径（存放未分类图书），默认: 从config.yaml读取
+- `-t, --target-dir PATH`: 目标目录路径（存放已分类图书），默认: 从config.yaml读取
+- `-b, --batch-size INTEGER`: 批处理大小，默认: 从config.yaml读取
+
+#### 2. config - 配置管理
+
+```bash
+# 显示当前配置
+book-sort config show
+
+# 验证配置
+book-sort config validate
+```
+
+#### 3. tasks - 任务管理
+
+```bash
+# 列出所有任务
+book-sort tasks list
+
+# 查看任务状态
+book-sort tasks status <task_id>
+```
+
+#### 4. version - 显示版本
+
+```bash
+book-sort version
+```
+
+### 常用示例
+
+```bash
+# 查看所有可用命令
+book-sort --help
+
+# 查看某个命令的详细帮助
+book-sort classify --help
+book-sort config --help
+book-sort tasks --help
+
+# 验证配置是否正确
+book-sort config validate
+
+# 查看当前配置
+book-sort config show
+
+# 开始分类（使用默认配置）
+book-sort classify
+
+# 查看任务列表
+book-sort tasks list
+
+# 查看特定任务状态
+book-sort tasks status task_20260118_123456
 ```
 
 ## 📁 项目结构
