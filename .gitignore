@@ -163,6 +163,7 @@ tmp/
 
 # Project specific
 credentials.json
+config.yaml
 config.yaml.bak
 design_detail.md
 *.puml
